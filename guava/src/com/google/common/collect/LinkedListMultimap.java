@@ -113,6 +113,7 @@ public class LinkedListMultimap<K, V> extends AbstractMultimap<K, V>
   private static final class Node<K, V> extends AbstractMapEntry<K, V> {
     final K key;
     V value;
+    boolean removed; // flag indicating that node is removed
     Node<K, V> next; // the next node (with any key)
     Node<K, V> previous; // the previous node (with any key)
     Node<K, V> nextSibling; // the next node with the same key
@@ -121,6 +122,7 @@ public class LinkedListMultimap<K, V> extends AbstractMultimap<K, V>
     Node(@Nullable K key, @Nullable V value) {
       this.key = key;
       this.value = value;
+      this.removed = false;
     }
 
     @Override
@@ -299,6 +301,7 @@ public class LinkedListMultimap<K, V> extends AbstractMultimap<K, V>
         node.nextSibling.previousSibling = node.previousSibling;
       }
     }
+    node.removed = true;
     size--;
   }
 
@@ -514,6 +517,9 @@ public class LinkedListMultimap<K, V> extends AbstractMultimap<K, V>
     @CanIgnoreReturnValue
     @Override
     public V next() {
+      while (next!=null && next.removed) {
+        next = next.nextSibling;
+      }
       checkElement(next);
       previous = current = next;
       next = next.nextSibling;
@@ -529,6 +535,9 @@ public class LinkedListMultimap<K, V> extends AbstractMultimap<K, V>
     @CanIgnoreReturnValue
     @Override
     public V previous() {
+      while(previous!=null && previous.removed){
+        previous = previous.previousSibling;
+      }
       checkElement(previous);
       next = current = previous;
       previous = previous.previousSibling;
